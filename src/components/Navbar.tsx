@@ -47,12 +47,12 @@ const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 lg:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 group">
+          <Link to="/?noRedirect=1" onClick={() => navigate('/?noRedirect=1')} className="flex items-center space-x-3 group">
             <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-2 rounded-xl group-hover:scale-110 transition-transform">
               <Shield className="h-8 w-8 text-white" />
             </div>
             <span className="text-xl lg:text-2xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-              EduChain
+              E-Certify
             </span>
           </Link>
 

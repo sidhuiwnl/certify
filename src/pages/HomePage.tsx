@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Shield, Award, CheckCircle, Users, ArrowRight, Zap, Lock, Globe, Star, TrendingUp, Clock, Smartphone } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Shield, ArrowRight, Zap, Lock, Globe, Star, TrendingUp, Clock, Smartphone } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -8,8 +8,27 @@ const HomePage: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect authenticated users to their dashboard
+  const getDashboardLink = () => {
+    if (!user) return '/';
+    switch (user.role) {
+      case 'student':
+        return '/student';
+      case 'institution':
+        return '/institution';
+      case 'verifier':
+        return '/verifier';
+      default:
+        return '/';
+    }
+  };
+
+  const { search } = useLocation();
+  const params = new URLSearchParams(search);
+  const noRedirect = params.get('noRedirect');
+
+  // Redirect authenticated users to their dashboard unless noRedirect flag is set
   useEffect(() => {
+    if (noRedirect === '1') return;
     if (isAuthenticated && user) {
       switch (user.role) {
         case 'student':
@@ -23,7 +42,7 @@ const HomePage: React.FC = () => {
           break;
       }
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate, noRedirect]);
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -61,10 +80,13 @@ const HomePage: React.FC = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
-              <Link to="/register" className="btn-primary flex items-center space-x-2 group">
+              <button
+                onClick={() => navigate(isAuthenticated ? getDashboardLink() : '/register')}
+                className="btn-primary flex items-center space-x-2 group"
+              >
                 <span>Start Your Journey</span>
                 <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              </button>
               <Link to="/verify" className="btn-outline flex items-center space-x-2">
                 <Shield className="h-5 w-5" />
                 <span>Verify Certificate</span>
@@ -99,7 +121,7 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20 slide-up">
             <h2 className="section-title text-gray-900 mb-6">
-              Why Choose <span className="text-gradient">EduChain</span>?
+              Why Choose <span className="text-gradient">E-Certify</span>?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Experience the future of credential management with our comprehensive suite of 
@@ -182,7 +204,7 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-20 slide-up">
             <h2 className="section-title text-gray-900 mb-6">
-              How <span className="text-gradient">EduChain</span> Works
+              How <span className="text-gradient">E-Certify</span> Works
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Simple, secure, and transparent certificate management in four easy steps
@@ -265,7 +287,7 @@ const HomePage: React.FC = () => {
               What Our <span className="text-gradient">Partners</span> Say
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Join thousands of institutions and students who trust EduChain for their academic credentials
+              Join thousands of institutions and students who trust E-Certify for their academic credentials
             </p>
           </div>
           
@@ -277,7 +299,7 @@ const HomePage: React.FC = () => {
                 ))}
               </div>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                "EduChain has revolutionized how we manage student credentials. The verification process 
+                "E-Certify has revolutionized how we manage student credentials. The verification process 
                 is incredibly fast and the security is unmatched."
               </p>
               <div className="flex items-center">
@@ -345,7 +367,7 @@ const HomePage: React.FC = () => {
               <span className="block text-gradient-gold">Your Credentials?</span>
             </h2>
             <p className="text-xl md:text-2xl mb-12 text-white/90 leading-relaxed">
-              Join the future of academic credential management. Start your journey with EduChain today 
+              Join the future of academic credential management. Start your journey with E-Certify today 
               and experience the power of blockchain-secured certificates.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
@@ -371,7 +393,7 @@ const HomePage: React.FC = () => {
                 <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-2 rounded-xl">
                   <Shield className="h-8 w-8 text-white" />
                 </div>
-                <span className="text-2xl font-bold">EduChain</span>
+                <span className="text-2xl font-bold">E-Certify</span>
               </div>
               <p className="text-gray-400 leading-relaxed">
                 The world's most advanced blockchain-based academic credential management platform, 
@@ -412,7 +434,7 @@ const HomePage: React.FC = () => {
           
           <div className="border-t border-gray-800 pt-8 text-center">
             <p className="text-gray-400">
-              &copy; 2024 EduChain. All rights reserved. | Built with ❤️ for the future of education
+              &copy; 2024 E-Certify. All rights reserved. | Built with ❤️ for the future of education
             </p>
           </div>
         </div>

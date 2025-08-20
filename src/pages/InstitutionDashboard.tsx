@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCertificates } from '../contexts/CertificateContext';
 import Navbar from '../components/Navbar';
-import CumulativeChart from '../components/CumulativeChart';
 import { 
   Award, 
   Users, 
@@ -159,13 +158,13 @@ const InstitutionDashboard: React.FC = () => {
               <div>
                 <p className="text-sm font-medium text-gray-600">This Month</p>
                 <p className="text-3xl font-bold text-gray-900">{stats.thisMonthCertificates}</p>
-                <p className={`text-sm flex items-center ${parseFloat(monthlyGrowth) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                  {parseFloat(monthlyGrowth) >= 0 ? (
+                <p className={`text-sm flex items-center ${parseFloat(typeof monthlyGrowth === "string" ? monthlyGrowth : "0") >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {parseFloat(typeof monthlyGrowth === "string" ? monthlyGrowth : "0") >= 0 ? (
                     <ArrowUpRight className="h-4 w-4 mr-1" />
                   ) : (
                     <ArrowDownRight className="h-4 w-4 mr-1" />
                   )}
-                  {Math.abs(parseFloat(monthlyGrowth))}% from last month
+                  {Math.abs(parseFloat(typeof monthlyGrowth === "string" ? monthlyGrowth : "0"))}% from last month
                 </p>
               </div>
               <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-3 rounded-xl">
@@ -191,27 +190,7 @@ const InstitutionDashboard: React.FC = () => {
           </div>
                  </div>
 
-         {/* Cumulative Charts */}
-         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-           <CumulativeChart
-             title="Certificate Issuance"
-             data={certificateIssuanceData}
-             type="certificates"
-             period="7d"
-           />
-           <CumulativeChart
-             title="Verification Rate"
-             data={verificationRateData}
-             type="verifications"
-             period="7d"
-           />
-           <CumulativeChart
-             title="Student Growth"
-             data={studentGrowthData}
-             type="growth"
-             period="7d"
-           />
-         </div>
+  {/* Cumulative Charts removed for Institution role */}
  
          {/* Charts and Analytics */}
          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">

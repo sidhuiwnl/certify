@@ -5,11 +5,11 @@ import html2canvas from 'html2canvas';
 const EMAIL_TEMPLATES = {
   welcome: {
     student: {
-      subject: 'Welcome to EduChain - Your Academic Credential Platform',
+      subject: 'Welcome to E-Certify - Your Academic Credential Platform',
       body: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="margin: 0; font-size: 28px;">Welcome to EduChain!</h1>
+            <h1 style="margin: 0; font-size: 28px;">Welcome to E-Certify!</h1>
             <p style="margin: 10px 0 0 0; font-size: 16px;">Your Academic Credential Platform</p>
           </div>
           
@@ -17,7 +17,7 @@ const EMAIL_TEMPLATES = {
             <h2 style="color: #333; margin-bottom: 20px;">Hello {{name}},</h2>
             
             <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
-              Welcome to EduChain! We're excited to have you join our blockchain-based academic credential platform. 
+              Welcome to E-Certify! We're excited to have you join our blockchain-based academic credential platform. 
               As a student, you'll be able to:
             </p>
             
@@ -51,18 +51,18 @@ const EMAIL_TEMPLATES = {
             
             <p style="color: #666; line-height: 1.6;">
               Best regards,<br>
-              The EduChain Team
+              The E-Certify Team
             </p>
           </div>
         </div>
       `
     },
     institution: {
-      subject: 'Welcome to EduChain - Institution Portal',
+      subject: 'Welcome to E-Certify - Institution Portal',
       body: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="margin: 0; font-size: 28px;">Welcome to EduChain!</h1>
+            <h1 style="margin: 0; font-size: 28px;">Welcome to E-Certify!</h1>
             <p style="margin: 10px 0 0 0; font-size: 16px;">Institution Portal</p>
           </div>
           
@@ -70,7 +70,7 @@ const EMAIL_TEMPLATES = {
             <h2 style="color: #333; margin-bottom: 20px;">Hello {{name}},</h2>
             
             <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
-              Welcome to EduChain! We're excited to have {{institutionName}} join our blockchain-based academic credential platform. 
+              Welcome to E-Certify! We're excited to have {{institutionName}} join our blockchain-based academic credential platform. 
               As an educational institution, you'll be able to:
             </p>
             
@@ -106,18 +106,18 @@ const EMAIL_TEMPLATES = {
             
             <p style="color: #666; line-height: 1.6;">
               Best regards,<br>
-              The EduChain Team
+              The E-Certify Team
             </p>
           </div>
         </div>
       `
     },
     verifier: {
-      subject: 'Welcome to EduChain - Verifier Portal',
+      subject: 'Welcome to E-Certify - Verifier Portal',
       body: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="margin: 0; font-size: 28px;">Welcome to EduChain!</h1>
+            <h1 style="margin: 0; font-size: 28px;">Welcome to E-Certify!</h1>
             <p style="margin: 10px 0 0 0; font-size: 16px;">Verifier Portal</p>
           </div>
           
@@ -125,7 +125,7 @@ const EMAIL_TEMPLATES = {
             <h2 style="color: #333; margin-bottom: 20px;">Hello {{name}},</h2>
             
             <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
-              Welcome to EduChain! We're excited to have {{companyName}} join our blockchain-based academic credential platform. 
+              Welcome to E-Certify! We're excited to have {{companyName}} join our blockchain-based academic credential platform. 
               As a verifier, you'll be able to:
             </p>
             
@@ -161,7 +161,7 @@ const EMAIL_TEMPLATES = {
             
             <p style="color: #666; line-height: 1.6;">
               Best regards,<br>
-              The EduChain Team
+              The E-Certify Team
             </p>
           </div>
         </div>
@@ -170,7 +170,7 @@ const EMAIL_TEMPLATES = {
   },
   
   certificateIssued: {
-    subject: 'Your Academic Certificate Has Been Issued - EduChain',
+    subject: 'Your Academic Certificate Has Been Issued - E-Certify',
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -204,7 +204,7 @@ const EMAIL_TEMPLATES = {
           
           <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
             Your certificate is attached to this email in PDF format. You can also access it anytime through your 
-            EduChain dashboard. The certificate is cryptographically secured and can be verified by anyone using 
+            E-Certify dashboard. The certificate is cryptographically secured and can be verified by anyone using 
             the provided QR code or certificate ID.
           </p>
           
@@ -224,7 +224,7 @@ const EMAIL_TEMPLATES = {
           <p style="color: #666; line-height: 1.6;">
             Best regards,<br>
             {{institutionName}}<br>
-            via EduChain Platform
+            via E-Certify Platform
           </p>
         </div>
       </div>
@@ -232,7 +232,7 @@ const EMAIL_TEMPLATES = {
   },
   
   verificationRequest: {
-    subject: 'New Certificate Available for Verification - EduChain',
+    subject: 'New Certificate Available for Verification - E-Certify',
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -284,7 +284,7 @@ const EMAIL_TEMPLATES = {
           
           <p style="color: #666; line-height: 1.6;">
             Best regards,<br>
-            The EduChain Team
+            The E-Certify Team
           </p>
         </div>
       </div>

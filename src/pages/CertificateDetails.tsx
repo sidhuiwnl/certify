@@ -108,52 +108,77 @@ const CertificateDetails: React.FC = () => {
           </div>
         </div>
 
-  {/* Certificate Preview */}
-  <div ref={certRef} className="bg-white rounded-lg shadow-lg p-8 mb-8 border-2 border-gray-200">
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <div className="bg-blue-100 p-3 rounded-full">
-                <Award className="h-8 w-8 text-blue-600" />
+        {/* Certificate Preview (Professional template) */}
+        <div ref={certRef} className="bg-white rounded-lg shadow-lg mb-8 border-4 border-gray-100">
+          <div className="p-8" style={{ fontFamily: 'Georgia, serif' }}>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 flex items-center justify-center bg-blue-50 rounded-md">
+                  <Award className="h-8 w-8 text-blue-700" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Presented by</p>
+                  <p className="text-lg font-semibold text-gray-900">{certificate.institutionName}</p>
+                </div>
+              </div>
+              <div className="text-right text-sm text-gray-500">
+                <p>Certificate ID</p>
+                <p className="font-mono text-xs text-gray-600">{certificate.id}</p>
               </div>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Certificate of Completion</h2>
-            <p className="text-gray-600">This certifies that</p>
-          </div>
-          
-          <div className="text-center mb-8">
-            <h3 className="text-3xl font-bold text-blue-600 mb-4">{certificate.studentName}</h3>
-            <p className="text-lg text-gray-700 mb-2">has successfully completed</p>
-            <h4 className="text-2xl font-semibold text-gray-900 mb-4">{certificate.courseName}</h4>
-            <p className="text-lg text-gray-700 mb-4">with a grade of <span className="font-bold text-green-600">{certificate.grade}</span></p>
-          </div>
-          
-          <div className="flex justify-between items-center mb-8">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Issued by</p>
-              <p className="font-semibold text-gray-900">{certificate.institutionName}</p>
+
+            <div className="text-center my-8">
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Certificate of Achievement</h1>
+              <p className="mt-3 text-gray-600 max-w-2xl mx-auto">This is to certify that</p>
+
+              <p className="mt-6 text-2xl md:text-3xl font-semibold text-blue-700">{certificate.studentName}</p>
+
+              <p className="mt-4 text-gray-600">has successfully completed</p>
+              <p className="mt-2 text-xl font-medium text-gray-800">{certificate.courseName}</p>
+
+              <p className="mt-4 text-gray-600">with a grade of <span className="font-bold text-green-600">{certificate.grade}</span></p>
             </div>
-            
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Completion Date</p>
-              <p className="font-semibold text-gray-900">{new Date(certificate.completionDate).toLocaleDateString()}</p>
+
+            <div className="flex items-center justify-between mt-8">
+              <div className="flex-1">
+                <p className="text-sm text-gray-500">Date</p>
+                <p className="font-medium text-gray-900">{new Date(certificate.issueDate).toLocaleDateString()}</p>
+              </div>
+
+              <div className="flex-1 text-center">
+                <p className="text-sm text-gray-500">Signature</p>
+                <div className="mt-4 h-10 border-b border-gray-300 w-40 mx-auto"></div>
+                <p className="text-xs text-gray-600 mt-2">Authorized Signatory</p>
+              </div>
+
+              <div className="flex-1 text-right">
+                <p className="text-sm text-gray-500">Verified</p>
+                <div className="mt-2 inline-flex items-center space-x-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="text-sm font-medium text-green-600">Verified on blockchain</span>
+                </div>
+              </div>
             </div>
-            
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Issue Date</p>
-              <p className="font-semibold text-gray-900">{new Date(certificate.issueDate).toLocaleDateString()}</p>
+
+            <div className="mt-8 flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <img
+                  src={certificate.qrCode}
+                  alt="QR"
+                  className="w-20 h-20 border border-gray-200 rounded-md bg-white p-1"
+                  onError={(e) => { e.currentTarget.src = `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(window.location.origin + '/verify/' + certificate.id)}`; }}
+                />
+                <div className="text-sm text-gray-500">
+                  <p>Scan to verify</p>
+                  <p className="font-mono text-xs text-gray-600">/verify/{certificate.id}</p>
+                </div>
+              </div>
+
+              <div className="text-right text-xs text-gray-500">
+                <p>Blockchain Hash</p>
+                <p className="font-mono text-xs text-gray-600 break-all max-w-xs">{certificate.blockchainHash}</p>
+              </div>
             </div>
-          </div>
-          
-          <div className="flex justify-center">
-            <img 
-              src={certificate.qrCode} 
-              alt="Certificate QR Code" 
-              className="w-32 h-32 border border-gray-200 rounded-lg bg-white p-2"
-              onError={(e) => {
-                console.error('QR Code failed to load:', certificate.qrCode);
-                e.currentTarget.src = `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(window.location.origin + '/verify/' + certificate.id)}`;
-              }}
-            />
           </div>
         </div>
 

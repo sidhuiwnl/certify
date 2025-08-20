@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCertificates } from '../contexts/CertificateContext';
 import Navbar from '../components/Navbar';
-import { Award, Upload, Calendar, User, BookOpen, GraduationCap } from 'lucide-react';
+import { Award, Upload, Calendar, User, BookOpen } from 'lucide-react';
 
 const IssueCertificate: React.FC = () => {
   const { user } = useAuth();
@@ -13,6 +13,7 @@ const IssueCertificate: React.FC = () => {
   const [formData, setFormData] = useState({
     studentName: '',
     studentEmail: '',
+  institutionName: user?.institutionName || '',
     courseName: '',
     grade: '',
     completionDate: '',
@@ -31,13 +32,13 @@ const IssueCertificate: React.FC = () => {
     try {
       const certificateData = {
         ...formData,
-        institutionName: user?.institutionName || 'Unknown Institution',
+  institutionName: formData.institutionName || user?.institutionName || 'Unknown Institution',
         institutionId: user?.id || '',
         issueDate: new Date().toISOString().split('T')[0],
         verificationStatus: 'verified' as const
       };
 
-      const certificateId = await addCertificate(certificateData);
+  await addCertificate(certificateData);
       
       // Show success message
       alert('Certificate issued successfully!');
@@ -230,14 +231,18 @@ const IssueCertificate: React.FC = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Institution
+                  <label htmlFor="institutionName" className="block text-sm font-medium text-gray-700">
+                    Institution Name *
                   </label>
                   <input
                     type="text"
-                    value={user?.institutionName || 'Unknown Institution'}
-                    disabled
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500"
+                    id="institutionName"
+                    name="institutionName"
+                    required
+                    value={formData.institutionName}
+                    onChange={handleChange}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., University of Example"
                   />
                 </div>
               </div>

@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+// import { Routes, Route } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCertificates } from '../contexts/CertificateContext';
 import Navbar from '../components/Navbar';
-import CumulativeChart from '../components/CumulativeChart';
-import { Award, Download, Share2, QrCode, Calendar, Building, TrendingUp, CheckCircle, ExternalLink, Copy, BarChart3, PieChart, Activity, ArrowUpRight, ArrowDownRight, Filter, Search, Eye } from 'lucide-react';
+import { Award, Download, Building, TrendingUp, CheckCircle, Copy, BarChart3, PieChart, ArrowUpRight, ArrowDownRight, Search } from 'lucide-react';
 
 const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -54,7 +53,7 @@ const StudentDashboard: React.FC = () => {
 
   const monthlyGrowth = stats.lastMonthCertificates > 0 
     ? ((stats.thisMonthCertificates - stats.lastMonthCertificates) / stats.lastMonthCertificates * 100).toFixed(1)
-    : 0;
+    : '0';
 
   // Course Analytics
   const courseStats = certificates.reduce((acc, cert) => {
@@ -76,19 +75,7 @@ const StudentDashboard: React.FC = () => {
     .sort(([,a], [,b]) => b - a)
     .slice(0, 3);
 
-  // Generate sample data for cumulative charts
-  const generateChartData = (baseValue: number, variance: number = 0.3) => {
-    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return days.map((day, index) => ({
-      date: day,
-      value: Math.max(0, Math.floor(baseValue * (1 + (Math.random() - 0.5) * variance))),
-      label: day
-    }));
-  };
-
-  const certificateChartData = generateChartData(3, 0.5);
-  const verificationChartData = generateChartData(5, 0.4);
-  const growthChartData = generateChartData(2, 0.6);
+  // Cumulative charts removed for Student role
 
   const downloadCertificate = (certificateId: string) => {
     // Simulate certificate download
@@ -187,27 +174,7 @@ const StudentDashboard: React.FC = () => {
           </div>
         </div>
 
-                 {/* Cumulative Charts */}
-         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-           <CumulativeChart
-             title="Certificate Growth"
-             data={certificateChartData}
-             type="certificates"
-             period="7d"
-           />
-           <CumulativeChart
-             title="Verification Activity"
-             data={verificationChartData}
-             type="verifications"
-             period="7d"
-           />
-           <CumulativeChart
-             title="Overall Growth"
-             data={growthChartData}
-             type="growth"
-             period="7d"
-           />
-         </div>
+         {/* Cumulative Charts removed for Student role */}
 
          {/* Charts and Analytics */}
          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
