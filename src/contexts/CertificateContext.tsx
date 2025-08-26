@@ -18,6 +18,12 @@ interface Certificate {
   qrCode: string;
   isVerified: boolean;
   verificationStatus: 'pending' | 'verified' | 'rejected';
+  // Optional verifier request metadata when a student requests verification
+  verifierRequest?: {
+    name: string;
+    email: string;
+    requestedAt: string;
+  } | null;
   fileUrl?: string;
   certificateType: 'degree' | 'diploma' | 'certificate' | 'transcript';
 }
@@ -29,6 +35,7 @@ interface CertificateContextType {
   getCertificatesByStudent: (studentEmail: string) => Certificate[];
   getCertificatesByInstitution: (institutionId: string) => Certificate[];
   updateCertificateStatus: (certificateId: string, status: 'verified' | 'rejected') => void;
+  requestVerification: (certificateId: string, verifierName: string, verifierEmail: string) => Promise<boolean>;
   generateHash: (data: string) => string;
 }
 
@@ -154,6 +161,41 @@ export const CertificateProvider: React.FC<{ children: React.ReactNode }> = ({ c
     localStorage.setItem('certificates', JSON.stringify(updatedCertificates));
   };
 
+  // Student requests a verifier to verify a specific certificate
+  const requestVerification = async (certificateId: string, verifierName: string, verifierEmail: string): Promise<boolean> => {
+    try {
+      const updatedCertificates = certificates.map((cert): Certificate => {
+        if (cert.id === certificateId) {
+          return {
+            ...cert,
+            verificationStatus: 'pending',
+            isVerified: false,
+            verifierRequest: {
+              name: verifierName,
+              email: verifierEmail,
+              requestedAt: new Date().toISOString()
+            }
+          } as Certificate;
+        }
+        return cert;
+      }) as Certificate[];
+
+      setCertificates(updatedCertificates);
+      localStorage.setItem('certificates', JSON.stringify(updatedCertificates));
+
+      // Find the certificate to send in the email
+      const certificate = updatedCertificates.find(c => c.id === certificateId);
+      if (certificate) {
+        await emailService.sendVerificationRequestEmail(certificate, verifierEmail, verifierName);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error requesting verification:', error);
+      return false;
+    }
+  };
+
   return (
     <CertificateContext.Provider value={{
       certificates,
@@ -161,7 +203,8 @@ export const CertificateProvider: React.FC<{ children: React.ReactNode }> = ({ c
       verifyCertificate,
       getCertificatesByStudent,
       getCertificatesByInstitution,
-      updateCertificateStatus,
+  updateCertificateStatus,
+  requestVerification,
       generateHash
     }}>
       {children}

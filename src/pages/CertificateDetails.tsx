@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useCertificates } from '../contexts/CertificateContext';
 import Navbar from '../components/Navbar';
 import { 
@@ -7,17 +7,17 @@ import {
   Download, 
   Share2, 
   CheckCircle, 
-  Calendar, 
   Building, 
   User, 
   Award, 
-  FileText,
+  // FileText,
   QrCode,
   Shield,
   ExternalLink
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { useAuth } from '../contexts/AuthContext';
 
 const CertificateDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,6 +25,9 @@ const CertificateDetails: React.FC = () => {
   const certRef = useRef<HTMLDivElement>(null);
   
   const certificate = verifyCertificate(id || '');
+  const { isAuthenticated, user } = useAuth();
+  const { updateCertificateStatus } = useCertificates();
+  const navigate = useNavigate();
 
   if (!certificate) {
     return (
@@ -52,8 +55,7 @@ const CertificateDetails: React.FC = () => {
     const canvas = await html2canvas(input, { scale: 2 });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
+  const pageWidth = pdf.internal.pageSize.getWidth();
     const imgProps = pdf.getImageProperties(imgData);
     const pdfWidth = pageWidth - 40;
     const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
@@ -104,6 +106,23 @@ const CertificateDetails: React.FC = () => {
                 <Share2 className="h-4 w-4" />
                 <span>Share</span>
               </button>
+              {/* Verifier action: open review/verify */}
+              {isAuthenticated && user?.role === 'verifier' && (
+                <button
+                  onClick={() => {
+                    if (!certificate) return;
+                    const confirmed = window.confirm('Mark this certificate as VERIFIED?');
+                    if (!confirmed) return;
+                    updateCertificateStatus(certificate.id, 'verified');
+                    // Optionally navigate back to verifier dashboard
+                    navigate('/verifier');
+                  }}
+                  className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors flex items-center space-x-2"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  <span>Verify Certificate</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useCertificates } from '../contexts/CertificateContext';
 import Navbar from '../components/Navbar';
+import VerificationRequestModal from '../components/VerificationRequestModal';
 import { Award, Download, Building, TrendingUp, CheckCircle, Copy, BarChart3, PieChart, ArrowUpRight, ArrowDownRight, Search } from 'lucide-react';
 
 const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { getCertificatesByStudent } = useCertificates();
+  const { getCertificatesByStudent, requestVerification } = useCertificates();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   
@@ -80,6 +81,26 @@ const StudentDashboard: React.FC = () => {
   const downloadCertificate = (certificateId: string) => {
     // Simulate certificate download
     alert(`Certificate ${certificateId} downloaded!`);
+  };
+
+  // Modal state for verification requests
+  const [showVerificationModal, setShowVerificationModal] = React.useState(false);
+  const [activeCertificateId, setActiveCertificateId] = React.useState<string | null>(null);
+
+  const openVerificationModal = (certificateId: string) => {
+    setActiveCertificateId(certificateId);
+    setShowVerificationModal(true);
+  };
+
+  const closeVerificationModal = () => {
+    setShowVerificationModal(false);
+    setActiveCertificateId(null);
+  };
+
+  const handleRequestVerification = async (verifierName: string, verifierEmail: string) => {
+    if (!activeCertificateId) return;
+    // call context to request verification
+    await requestVerification(activeCertificateId, verifierName, verifierEmail);
   };
 
   const shareCertificate = (certificateId: string) => {
@@ -380,6 +401,13 @@ const StudentDashboard: React.FC = () => {
                           <span>Share Link</span>
                         </button>
                         
+                        <button
+                          onClick={() => openVerificationModal(certificate.id)}
+                          className="flex items-center space-x-2 text-yellow-600 hover:text-yellow-800 font-medium transition-colors"
+                        >
+                          <span>Request Verification</span>
+                        </button>
+                        
                         {/* Verify Online link removed for student role */}
                       </div>
                       
@@ -394,6 +422,16 @@ const StudentDashboard: React.FC = () => {
           )}
         </div>
       </div>
+      {activeCertificateId && (
+        <VerificationRequestModal
+          visible={showVerificationModal}
+          onClose={closeVerificationModal}
+          certificateId={activeCertificateId}
+          onSubmit={async (name, email) => {
+            await handleRequestVerification(name, email);
+          }}
+        />
+      )}
     </div>
   );
 };

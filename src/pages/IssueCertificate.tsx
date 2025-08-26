@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCertificates } from '../contexts/CertificateContext';
 import Navbar from '../components/Navbar';
-import { Award, Upload, Calendar, User, BookOpen } from 'lucide-react';
+import { Award, Calendar, User, BookOpen } from 'lucide-react';
 
 const IssueCertificate: React.FC = () => {
   const { user } = useAuth();
@@ -248,35 +248,7 @@ const IssueCertificate: React.FC = () => {
               </div>
             </div>
 
-            {/* File Upload Section */}
-            <div className="border-t border-gray-200 pt-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <Upload className="h-5 w-5 text-orange-600 mr-2" />
-                Certificate Document (Optional)
-              </h2>
-              
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-sm text-gray-600 mb-2">
-                  Upload the certificate document (PDF, JPG, PNG)
-                </p>
-                <p className="text-xs text-gray-500 mb-4">
-                  The document will be stored securely and its hash will be recorded on the blockchain
-                </p>
-                <input
-                  type="file"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  className="hidden"
-                  id="certificateFile"
-                />
-                <label
-                  htmlFor="certificateFile"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
-                >
-                  Choose File
-                </label>
-              </div>
-            </div>
+            {/* File upload removed - certificates are issued without attaching documents */}
 
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-md p-3">

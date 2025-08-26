@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useCertificates } from '../contexts/CertificateContext';
 import { Shield, LogOut, User, Home, Menu, X, ChevronDown } from 'lucide-react';
+import { Bell, ExternalLink } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const { isAuthenticated, user, logout } = useAuth();
+  const { certificates } = useCertificates();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -58,6 +62,58 @@ const Navbar: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
+            {/* Verifier notifications */}
+            {isAuthenticated && user?.role === 'verifier' && (
+              <div className="relative">
+                <button
+                  onClick={() => setIsNotifOpen(!isNotifOpen)}
+                  className="relative p-2 rounded-lg text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                >
+                  <Bell className="h-5 w-5" />
+                  {/* badge count */}
+                  {certificates && certificates.filter(c => c.verificationStatus === 'pending' && c.verifierRequest && c.verifierRequest.email === user.email).length > 0 && (
+                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-semibold leading-none text-white bg-red-600 rounded-full">
+                      {certificates.filter(c => c.verificationStatus === 'pending' && c.verifierRequest && c.verifierRequest.email === user.email).length}
+                    </span>
+                  )}
+                </button>
+
+                {isNotifOpen && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                    <div className="px-4 py-3 border-b border-gray-100 font-semibold">Verification Requests</div>
+                    <div className="max-h-72 overflow-auto">
+                      {certificates.filter(c => c.verificationStatus === 'pending' && c.verifierRequest && c.verifierRequest.email === user.email).length === 0 ? (
+                        <div className="p-4 text-sm text-gray-600">No pending requests</div>
+                      ) : (
+                        certificates
+                          .filter(c => c.verificationStatus === 'pending' && c.verifierRequest && c.verifierRequest.email === user.email)
+                          .map((c) => (
+                            <div key={c.id} className="flex items-start justify-between px-4 py-3 hover:bg-gray-50">
+                              <div className="flex-1 pr-2">
+                                <div className="text-sm font-semibold text-gray-900">{c.courseName}</div>
+                                <div className="text-xs text-gray-600">Student: {c.studentName}</div>
+                                <div className="text-xs text-gray-500 mt-1">Requested: {c.verifierRequest?.requestedAt ? new Date(c.verifierRequest.requestedAt).toLocaleString() : ''}</div>
+                              </div>
+                              <div className="flex-shrink-0 ml-2">
+                                <button
+                                  onClick={() => {
+                                    setIsNotifOpen(false);
+                                    navigate(`/certificate/${c.id}`);
+                                  }}
+                                  className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                  <span>Open</span>
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
             {(!user || user.role !== 'student') && (
               <Link
                 to="/verify"
