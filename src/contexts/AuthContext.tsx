@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { emailService } from '../utils/emailService';
 
+// Backend base URL - if you run the backend locally, this points to it.
+const BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || '';
+
 interface User {
   id: string;
   email: string;
@@ -51,10 +54,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, password: string): Promise<User | null> => {
-    // Simulate API call
     setLoading(true);
-    
-    // Demo users for different roles
+
+    // If backend is configured, call it
+    if (BACKEND_BASE) {
+      try {
+        const res = await fetch(`${BACKEND_BASE}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+
+        const payload = await res.json();
+        if (!res.ok) {
+          console.log('Backend login failed', payload);
+          setLoading(false);
+          return null;
+        }
+
+        const { token, user: userPayload } = payload;
+        localStorage.setItem('ec_token', token);
+        setUser(userPayload);
+        localStorage.setItem('user', JSON.stringify(userPayload));
+        setLoading(false);
+        return userPayload;
+      } catch (err) {
+        console.error('Login error contacting backend', err);
+        setLoading(false);
+        return null;
+      }
+    }
+
+    // Fallback: local demo users
+    setLoading(true);
     const demoUsers = [
       {
         id: '1',
@@ -82,10 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     ];
 
-    // First check demo users
     let foundUser = demoUsers.find(u => u.email === email && u.password === password);
-    
-    // If not found in demo users, check registered users
     if (!foundUser) {
       const registeredUsers = localStorage.getItem('registeredUsers');
       if (registeredUsers) {
@@ -97,26 +126,53 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     }
-    
+
     if (foundUser) {
       const { password, ...userWithoutPassword } = foundUser;
-      console.log('Login successful for:', userWithoutPassword);
       setUser(userWithoutPassword);
       localStorage.setItem('user', JSON.stringify(userWithoutPassword));
       setLoading(false);
       return userWithoutPassword;
     }
-    
-    console.log('Login failed - no user found for:', email);
+
     setLoading(false);
     return null;
   };
 
   const register = async (userData: any): Promise<boolean> => {
-    // Simulate registration
     setLoading(true);
-    
-    // Check if user already exists
+
+    // If backend is available, call it
+    if (BACKEND_BASE) {
+      try {
+        const res = await fetch(`${BACKEND_BASE}/api/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userData)
+        });
+
+        if (!res.ok) {
+          const payload = await res.json();
+          console.error('Backend register failed', payload);
+          setLoading(false);
+          return false;
+        }
+
+        // After registering, auto-login
+        const loginRes = await login(userData.email, userData.password);
+        // send welcome email from frontend service if desired
+        try { await emailService.sendWelcomeEmail(userData); } catch (e) { /* ignore */ }
+        setLoading(false);
+        return !!loginRes;
+      } catch (err) {
+        console.error('Register error contacting backend', err);
+        setLoading(false);
+        return false;
+      }
+    }
+
+    // Fallback: local registration
+    setLoading(true);
     const registeredUsers = localStorage.getItem('registeredUsers');
     let users = [];
     if (registeredUsers) {
@@ -127,36 +183,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         users = [];
       }
     }
-    
-    // Check if email already exists
+
     const existingUser = users.find((u: any) => u.email === userData.email);
     if (existingUser) {
       setLoading(false);
-      return false; // User already exists
+      return false;
     }
-    
+
     const newUser = {
       id: Date.now().toString(),
       ...userData,
       isVerified: userData.role === 'student' ? true : false
     };
-    
-    // Add to registered users list
+
     users.push(newUser);
     localStorage.setItem('registeredUsers', JSON.stringify(users));
-    
+
     const { password, ...userWithoutPassword } = newUser;
     setUser(userWithoutPassword);
     localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-    
-    // Send welcome email
-    try {
-      await emailService.sendWelcomeEmail(userWithoutPassword);
-      console.log('Welcome email sent successfully to:', userData.email);
-    } catch (error) {
-      console.error('Failed to send welcome email:', error);
-    }
-    
+
+    try { await emailService.sendWelcomeEmail(userWithoutPassword); } catch (e) { /* ignore */ }
+
     setLoading(false);
     return true;
   };
@@ -167,11 +215,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('user');
   };
 
-  const clearAuthState = () => {
-    console.log('Clearing authentication state');
-    setUser(null);
-    localStorage.removeItem('user');
-  };
 
   const clearAllData = () => {
     console.log('Clearing all data');

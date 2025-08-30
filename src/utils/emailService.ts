@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { supabase } from '../supabaseClient';
 
 // Email templates
 const EMAIL_TEMPLATES = {
@@ -344,7 +345,8 @@ export class EmailService {
   }
 
   // Send certificate issued email with PDF attachment
-  public async sendCertificateEmail(certificate: any, studentEmail: string): Promise<boolean> {
+  // Returns structured result indicating whether send was accepted and whether it was simulated
+  public async sendCertificateEmail(certificate: any, studentEmail: string): Promise<{ ok: boolean; simulated: boolean }> {
     try {
       const template = EMAIL_TEMPLATES.certificateIssued;
       
@@ -359,21 +361,39 @@ export class EmailService {
         .replace(/{{certificateId}}/g, certificate.id)
         .replace(/{{dashboardUrl}}/g, dashboardUrl);
 
-      // Generate PDF certificate
+      // Generate PDF certificate (for fallback or attachment)
       const pdfBlob = await this.generateCertificatePDF(certificate);
 
-      console.log('Sending certificate email to:', studentEmail);
+      // Try sending via email-server HTTP endpoint first
+      const API_URL = import.meta.env.VITE_EMAIL_SERVER_URL || (import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/send-email/certificate` : 'http://localhost:4200/send-email/certificate');
+
+      try {
+        const resp = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: studentEmail, subject: template.subject, html: body })
+        });
+
+        if (resp.ok) {
+          console.log('Email-server accepted certificate email for', studentEmail);
+          return { ok: true, simulated: false };
+        }
+
+        console.warn('Email-server rejected certificate email:', await resp.text());
+      } catch (err) {
+        console.warn('Could not reach email-server for certificate email:', err);
+      }
+
+      // Fallback: simulate email send and log PDF info
+      console.log('Falling back to simulated certificate email for', studentEmail);
       console.log('Subject:', template.subject);
       console.log('Body:', body);
       console.log('PDF generated:', pdfBlob.size, 'bytes');
-
-      // Simulate email sending delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      return true;
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return { ok: true, simulated: true };
     } catch (error) {
       console.error('Error sending certificate email:', error);
-      return false;
+      return { ok: false, simulated: false };
     }
   }
 
@@ -392,13 +412,30 @@ export class EmailService {
         .replace(/{{certificateId}}/g, certificate.id)
         .replace(/{{verifierDashboardUrl}}/g, verifierDashboardUrl);
 
-      console.log('Sending verification request email to:', verifierEmail);
+      const API_URL = import.meta.env.VITE_EMAIL_SERVER_URL || (import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL.replace(/\/$/, '')}/send-email/verifier` : 'http://localhost:4200/send-email/verifier');
+
+      try {
+        const resp = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to: verifierEmail, subject: template.subject, html: body })
+        });
+
+        if (resp.ok) {
+          console.log('Email-server accepted verification request email for', verifierEmail);
+          return true;
+        }
+
+        console.warn('Email-server rejected verification request email:', await resp.text());
+      } catch (err) {
+        console.warn('Could not reach email-server for verification request email:', err);
+      }
+
+      // Fallback: simulated send
+      console.log('Falling back to simulated verification request email for', verifierEmail);
       console.log('Subject:', template.subject);
       console.log('Body:', body);
-
-      // Simulate email sending delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
       return true;
     } catch (error) {
       console.error('Error sending verification request email:', error);
@@ -479,8 +516,7 @@ export class EmailService {
         const imgData = canvas.toDataURL('image/png');
         const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
         
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
+  const pageWidth = pdf.internal.pageSize.getWidth();
         const imgWidth = pageWidth - 20;
         const imgHeight = (canvas.height * imgWidth) / canvas.width;
         
@@ -499,17 +535,33 @@ export class EmailService {
   // Get all verifiers for notification
   public async getVerifiers(): Promise<any[]> {
     try {
-      const registeredUsers = localStorage.getItem('registeredUsers');
-      if (registeredUsers) {
-        const users = JSON.parse(registeredUsers);
-        return users.filter((user: any) => user.role === 'verifier');
+      // Resolve role id for 'verifier' then fetch users with that role_id
+      const roleResp = await supabase.from('roles').select('id').eq('name', 'verifier').limit(1).single();
+      if (roleResp.error) {
+        console.error('Error fetching verifier role id from Supabase:', roleResp.error);
+        return [];
       }
-      return [];
+
+      const roleId = roleResp.data ? roleResp.data.id : null;
+      if (!roleId) return [];
+
+      const usersResp = await supabase
+        .from('users')
+        .select('id, name, email, company_name, institution_id, role_id')
+        .eq('role_id', roleId);
+
+      if (usersResp.error) {
+        console.error('Error fetching verifiers from Supabase:', usersResp.error);
+        return [];
+      }
+
+      return usersResp.data || [];
     } catch (error) {
       console.error('Error getting verifiers:', error);
       return [];
     }
-  }
+}
+
 }
 
 // Export singleton instance
