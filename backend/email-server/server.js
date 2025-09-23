@@ -12,7 +12,9 @@ app.use(express.json());
 
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD,
@@ -60,6 +62,8 @@ app.post("/send-email/certificate", async (req, res) => {
 
 app.post("/send-email/verifier", async (req, res) => {
     const { to,verifierName,studentName,courseName,institutionName,issueDate,certificateId} = req.body;
+
+    console.log(req.body);
 
     try {
         await transporter.sendMail({

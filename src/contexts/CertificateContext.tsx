@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { generateQRCodeForCertificate } from '../utils/qrCodeGenerator';
-import { emailService } from '../utils/emailService';
 
 interface Certificate {
   id: string;
@@ -113,6 +112,8 @@ export const CertificateProvider: React.FC<{ children: React.ReactNode }> = ({ c
       verificationStatus: 'pending'
     };
 
+    console.log("certification data",certificateData);
+
     const updatedCertificates = [...certificates, newCertificate];
     setCertificates(updatedCertificates);
     localStorage.setItem('certificates', JSON.stringify(updatedCertificates));
@@ -155,36 +156,27 @@ export const CertificateProvider: React.FC<{ children: React.ReactNode }> = ({ c
         console.warn('Failed to persist certificate to backend', await resp.text());
       }
 
-      // Send certificate email to student (attempt real email-server, falls back to simulated)
+      // Send certificate email to student
       try {
-        const emailResult: any = await emailService.sendCertificateEmail(newCertificate, certificateData.studentEmail);
-
-        const emailSent = !!(emailResult && (emailResult.ok === true || emailResult === true));
-        const simulated = emailResult && typeof emailResult === 'object' ? !!emailResult.simulated : false;
-
-        if (persistOk && emailSent && !simulated) {
-          console.log(`Certificate stored in Supabase and emailed to ${certificateData.studentEmail}`);
-        } else {
-          if (!persistOk) console.log('Certificate was not persisted to backend.');
-          if (!emailSent) console.log('Certificate email failed to send.');
-          if (simulated && persistOk) console.log('Certificate persisted but email was simulated (email-server unavailable).');
-        }
+        await fetch(`http://localhost:5000/send-email/certificate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: newCertificate.studentEmail,
+            studentName: newCertificate.studentName,
+            courseName: newCertificate.courseName,
+            grade: newCertificate.grade,
+            institutionName: newCertificate.institutionName,
+            issueDate: newCertificate.issueDate,
+            completionDate: newCertificate.completionDate,
+            certificateId: newCertificate.id
+          })
+        });
       } catch (error) {
         console.error('Failed to send certificate email:', error);
       }
     } catch (err) {
       console.error('Error persisting certificate to backend:', err);
-    }
-    
-    // Send verification request emails to all verifiers
-    try {
-      const verifiers = await emailService.getVerifiers();
-      for (const verifier of verifiers) {
-        await emailService.sendVerificationRequestEmail(newCertificate, verifier.email, verifier.name);
-        console.log('Verification request email sent to:', verifier.email);
-      }
-    } catch (error) {
-      console.error('Failed to send verification request emails:', error);
     }
     
     return id;
@@ -202,7 +194,7 @@ export const CertificateProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return certificates.filter(cert => cert.institutionId === institutionId);
   };
 
-  const updateCertificateStatus = (certificateId: string, status: 'verified' | 'rejected'): void => {
+  const updateCertificateStatus = async (certificateId: string, status: 'verified' | 'rejected'): Promise<void> => {
     const updatedCertificates = certificates.map(cert => 
       cert.id === certificateId 
         ? { ...cert, verificationStatus: status, isVerified: status === 'verified' }
@@ -210,11 +202,45 @@ export const CertificateProvider: React.FC<{ children: React.ReactNode }> = ({ c
     );
     setCertificates(updatedCertificates);
     localStorage.setItem('certificates', JSON.stringify(updatedCertificates));
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+      const token = localStorage.getItem('ec_token') || localStorage.getItem('token') || localStorage.getItem('authToken') || undefined;
+
+      await fetch(`${API_URL}/api/certificates/${certificateId}/status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ status })
+      });
+    } catch (err) {
+      console.error('Error updating certificate status in backend:', err);
+    }
   };
 
   // Student requests a verifier to verify a specific certificate
   const requestVerification = async (certificateId: string, verifierName: string, verifierEmail: string): Promise<boolean> => {
     try {
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+      const token = localStorage.getItem('ec_token') || localStorage.getItem('token') || localStorage.getItem('authToken') || undefined;
+
+      // Get verifier id from email
+      const userResp = await fetch(`${API_URL}/api/users/by-email/${verifierEmail}`, {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+
+      if (!userResp.ok) {
+        console.warn('Failed to get verifier id from email', await userResp.text());
+        return false;
+      }
+
+      const { user } = await userResp.json();
+      const verifierId = user.id;
+
       const updatedCertificates = certificates.map((cert): Certificate => {
         if (cert.id === certificateId) {
           return {
@@ -239,10 +265,6 @@ export const CertificateProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
         // Persist verification request to backend (will create verification_requests row)
         try {
-          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
-          // Use 'ec_token' saved by AuthContext when available
-          const token = localStorage.getItem('ec_token') || localStorage.getItem('token') || localStorage.getItem('authToken') || undefined;
-
           // backend accepts verifier_id; if we only have email/name we pass null and include details in message
           const resp = await fetch(`${API_URL}/api/certificates/${certificateId}/request-verification`, {
             method: 'POST',
@@ -250,7 +272,7 @@ export const CertificateProvider: React.FC<{ children: React.ReactNode }> = ({ c
               'Content-Type': 'application/json',
               ...(token ? { Authorization: `Bearer ${token}` } : {})
             },
-            body: JSON.stringify({ verifier_id: null, message: JSON.stringify({ name: verifierName, email: verifierEmail }) })
+            body: JSON.stringify({ verifier_id: verifierId, message: JSON.stringify({ name: verifierName, email: verifierEmail }) })
           });
 
           if (resp.ok) {
@@ -263,7 +285,23 @@ export const CertificateProvider: React.FC<{ children: React.ReactNode }> = ({ c
         }
 
         if (certificate) {
-          await emailService.sendVerificationRequestEmail(certificate, verifierEmail, verifierName);
+          try {
+            await fetch(`http://localhost:5000/send-email/verifier`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: verifierEmail,
+                verifierName: verifierName,
+                studentName: certificate.studentName,
+                courseName: certificate.courseName,
+                institutionName: certificate.institutionName,
+                issueDate: certificate.issueDate,
+                certificateId: certificate.id
+              })
+            });
+          } catch (error) {
+            console.error('Failed to send verifier email:', error);
+          }
         }
 
         return true;

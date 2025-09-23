@@ -254,7 +254,7 @@ function requireRole(roleName) {
 // Create a certificate (only institution users should call this)
 app.post('/api/certificates', authMiddleware, async (req, res) => {
 
-  console.log("the data",res.body);
+  console.log("the data",req.body);
 
 
   const { student_name, student_email, course_name, certificate_type, grade, completion_date, issuer_institution_id } = req.body;
@@ -371,5 +371,53 @@ app.post('/api/verification_requests/:id/verify', authMiddleware, async (req, re
   } catch (err) {
     console.error('Verify request error', err && err.message);
     return res.status(500).json({ error: 'Failed to verify', detail: err && err.message });
+  }
+});
+
+app.post('/api/certificates/:id/status', authMiddleware, async (req, res) => {
+  const certId = req.params.id;
+  const { status } = req.body;
+
+  if (!req.user) return res.status(401).json({ error: 'Not authenticated' });
+
+  try {
+    const { data, error } = await supabase
+      .from('certificates')
+      .update({ status: status, is_verified: status === 'verified' })
+      .eq('id', certId);
+
+    if (error) {
+      console.error('Error updating certificate status', error);
+      return res.status(500).json({ error: 'Failed to update certificate status', detail: error.message || error });
+    }
+
+    return res.status(200).json({ certificate: data });
+  } catch (err) {
+    console.error('Update certificate status error', err && err.message);
+    return res.status(500).json({ error: 'Failed to update certificate status', detail: err && (err.message || JSON.stringify(err)) });
+  }
+});
+
+app.get('/api/users/by-email/:email', async (req, res) => {
+  const email = req.params.email;
+
+
+
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (error) {
+      console.error('Error getting user by email', error);
+      return res.status(500).json({ error: 'Failed to get user by email', detail: error.message || error });
+    }
+
+    return res.status(200).json({ user: data });
+  } catch (err) {
+    console.error('Get user by email error', err && err.message);
+    return res.status(500).json({ error: 'Failed to get user by email', detail: err && (err.message || JSON.stringify(err)) });
   }
 });

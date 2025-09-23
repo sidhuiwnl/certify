@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { emailService } from '../utils/emailService';
 
 // Backend base URL - if you run the backend locally, this points to it.
-const BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || '';
+const BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
 
 interface User {
   id: string;
@@ -160,8 +159,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // After registering, auto-login
         const loginRes = await login(userData.email, userData.password);
-        // send welcome email from frontend service if desired
-        try { await emailService.sendWelcomeEmail(userData); } catch (e) { /* ignore */ }
+        // send welcome email
+        if (loginRes) {
+          try {
+            await fetch(`http://localhost:5000/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: userData.email,
+                name: userData.name,
+                role: userData.role
+              })
+            });
+          } catch (e) {
+            console.error('Failed to send welcome email', e);
+          }
+        }
         setLoading(false);
         return !!loginRes;
       } catch (err) {
@@ -203,7 +216,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(userWithoutPassword);
     localStorage.setItem('user', JSON.stringify(userWithoutPassword));
 
-    try { await emailService.sendWelcomeEmail(userWithoutPassword); } catch (e) { /* ignore */ }
+    try {
+      await fetch(`http://localhost:5000/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: userWithoutPassword.email,
+          name: userWithoutPassword.name,
+          role: userWithoutPassword.role
+        })
+      });
+    } catch (e) {
+      console.error('Failed to send welcome email', e);
+    }
 
     setLoading(false);
     return true;

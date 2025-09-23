@@ -2,9 +2,9 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const STUDENT_DASHBOARD = process.env.STUDENT_DASHBOARD_URL;
-const INSTITUTION = process.env.INSTITUTION;
-const VERIFICATION = process.env.VERIFICATION;
+const STUDENT_DASHBOARD = process.env.STUDENT_DASHBOARD_URL || "http://localhost:5173/student";
+const INSTITUTION = process.env.INSTITUTION || "http://localhost:5173/institution";
+const VERIFICATION = process.env.VERIFICATION || "http://localhost:5173/verifier";
 
 export const templates = {
     student: {
