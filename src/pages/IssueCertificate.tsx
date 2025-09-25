@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCertificates } from '../contexts/CertificateContext';
 import Navbar from '../components/Navbar';
-import { Award, Calendar, User, BookOpen } from 'lucide-react';
+import { Award, Calendar, User, BookOpen, Wallet } from 'lucide-react';
 
 const IssueCertificate: React.FC = () => {
-  const { user } = useAuth();
+  const { user, walletAccount, connectWallet } = useAuth();
   const { addCertificate } = useCertificates();
   const navigate = useNavigate();
   
@@ -27,6 +27,12 @@ const IssueCertificate: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!walletAccount) {
+      setError('Please connect your wallet before issuing a certificate.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -101,6 +107,21 @@ const IssueCertificate: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Issue New Certificate</h1>
           <p className="mt-2 text-gray-600">Create a new blockchain-secured certificate for your student.</p>
         </div>
+
+        {!walletAccount && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <Wallet className="h-5 w-5 text-yellow-400" aria-hidden="true" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  Please connect your wallet to issue a certificate. You can connect your wallet from the navigation bar.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-lg shadow-md p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -274,7 +295,7 @@ const IssueCertificate: React.FC = () => {
               </button>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || !walletAccount}
                 className="bg-blue-600 text-white px-8 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center space-x-2"
               >
                 {loading ? (

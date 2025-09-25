@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCertificates } from '../contexts/CertificateContext';
-import { Shield, LogOut, User, Home, Menu, X, ChevronDown } from 'lucide-react';
+import { Shield, LogOut, User, Home, Menu, X, ChevronDown, Wallet } from 'lucide-react';
 import { Bell, ExternalLink } from 'lucide-react';
+import { shortenAddress } from '../utils/blockchain';
 
 const Navbar: React.FC = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, walletAccount, connectWallet } = useAuth();
   const { certificates } = useCertificates();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -125,6 +126,24 @@ const Navbar: React.FC = () => {
 
             {isAuthenticated ? (
               <>
+                {user.role === 'institution' && (
+                  <>
+                    {walletAccount ? (
+                      <div className="flex items-center space-x-2 text-sm font-medium text-gray-700 bg-gray-100 px-3 py-2 rounded-lg">
+                        <Wallet className="h-4 w-4 text-green-600" />
+                        <span>{shortenAddress(walletAccount)}</span>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={connectWallet}
+                        className="btn-secondary text-sm flex items-center space-x-2"
+                      >
+                        <Wallet className="h-4 w-4" />
+                        <span>Connect Wallet</span>
+                      </button>
+                    )}
+                  </>
+                )}
                 <Link
                   to={getDashboardLink()}
                   className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:bg-blue-50"

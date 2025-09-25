@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { requestAccounts, isEthereumAvailable } from '../utils/blockchain';
 
 // Backend base URL - if you run the backend locally, this points to it.
 const BACKEND_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
@@ -22,6 +23,8 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   clearAllData: () => void;
+  walletAccount: string | null;
+  connectWallet: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,6 +39,7 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [walletAccount, setWalletAccount] = useState<string | null>(null);
 
   console.log("user",user)
   const [loading, setLoading] = useState(true);
@@ -52,8 +56,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem('user');
       }
     }
+    checkWalletConnection();
     setLoading(false);
   }, []);
+
+  const checkWalletConnection = async () => {
+    if (isEthereumAvailable()) {
+      const accounts = await requestAccounts();
+      if (accounts.length > 0) {
+        setWalletAccount(accounts[0]);
+      }
+    }
+  };
+
+  const connectWallet = async () => {
+    if (isEthereumAvailable()) {
+      const accounts = await requestAccounts();
+      if (accounts.length > 0) {
+        setWalletAccount(accounts[0]);
+      }
+    } else {
+      alert('Please install MetaMask!');
+    }
+  };
 
   const login = async (email: string, password: string): Promise<User | null> => {
     setLoading(true);
@@ -261,7 +286,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       register,
       isAuthenticated: !!user,
       loading,
-      clearAllData
+      clearAllData,
+      walletAccount,
+      connectWallet
     }}>
       {children}
     </AuthContext.Provider>

@@ -1,0 +1,39 @@
+[
+  {
+    "type": "function",
+    "name": "get",
+    "stateMutability": "view",
+    "inputs": [{ "name": "certId", "type": "bytes32" }],
+    "outputs": [
+      {
+        "components": [
+          { "name": "contentHash", "type": "bytes32" },
+          { "name": "issuer", "type": "address" },
+          { "name": "issuedAt", "type": "uint64" },
+          { "name": "revoked", "type": "bool" },
+          { "name": "uri", "type": "string" }
+        ],
+        "type": "tuple"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "issue",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      { "name": "certId", "type": "bytes32" },
+      { "name": "contentHash", "type": "bytes32" },
+      { "name": "uri", "type": "string" }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "revoke",
+    "stateMutability": "nonpayable",
+    "inputs": [{ "name": "certId", "type": "bytes32" }],
+    "outputs": []
+  }
+]
+

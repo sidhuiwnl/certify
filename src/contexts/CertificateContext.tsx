@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { generateQRCodeForCertificate } from '../utils/qrCodeGenerator';
+import { generateCertificateHash } from '../utils/blockchain';
+
 
 interface Certificate {
   id: string;
@@ -35,7 +37,6 @@ interface CertificateContextType {
   getCertificatesByInstitution: (institutionId: string) => Certificate[];
   updateCertificateStatus: (certificateId: string, status: 'verified' | 'rejected') => void;
   requestVerification: (certificateId: string, verifierName: string, verifierEmail: string) => Promise<boolean>;
-  generateHash: (data: string) => string;
 }
 
 const CertificateContext = createContext<CertificateContextType | undefined>(undefined);
@@ -82,21 +83,11 @@ export const CertificateProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, []);
 
-  const generateHash = (data: string): string => {
-    // Simulate SHA-256 hash generation
-    let hash = 0;
-    for (let i = 0; i < data.length; i++) {
-      const char = data.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return `0x${Math.abs(hash).toString(16)}...`;
-  };
 
   const addCertificate = async (certificateData: Omit<Certificate, 'id' | 'blockchainHash' | 'ipfsHash' | 'qrCode' | 'isVerified'>): Promise<string> => {
     const id = `cert-${Date.now()}`;
     const dataToHash = JSON.stringify(certificateData);
-    const blockchainHash = generateHash(dataToHash);
+    const blockchainHash = await generateCertificateHash(certificateData);
     const ipfsHash = `Qm${Math.random().toString(36).substr(2, 42)}`;
     
     // Generate QR code as data URL
@@ -319,8 +310,7 @@ export const CertificateProvider: React.FC<{ children: React.ReactNode }> = ({ c
       getCertificatesByStudent,
       getCertificatesByInstitution,
   updateCertificateStatus,
-  requestVerification,
-      generateHash
+  requestVerification
     }}>
       {children}
     </CertificateContext.Provider>
