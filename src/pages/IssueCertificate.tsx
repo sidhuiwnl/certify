@@ -33,7 +33,7 @@ const IssueCertificate: React.FC = () => {
       const certificateData = {
         ...formData,
   institutionName: formData.institutionName || user?.institutionName || 'Unknown Institution',
-        institutionId: user?.id || '',
+        institutionId: user?.institution_id || '',
         issueDate: new Date().toISOString().split('T')[0],
         verificationStatus: 'verified' as const
       };

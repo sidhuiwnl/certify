@@ -167,7 +167,7 @@ app.post('/api/login', async (req, res) => {
       roleName = null;
     }
 
-    const payload = { id: userRow.id, email: userRow.email, role: roleName };
+    const payload = { id: userRow.id, email: userRow.email, role: roleName, institution_id : userRow.institution_id };
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 
     // create session row and return the inserted row for logging/diagnostics
@@ -253,8 +253,6 @@ function requireRole(roleName) {
 
 // Create a certificate (only institution users should call this)
 app.post('/api/certificates', authMiddleware, async (req, res) => {
-
-  console.log("the data",req.body);
 
 
   const { student_name, student_email, course_name, certificate_type, grade, completion_date, issuer_institution_id } = req.body;

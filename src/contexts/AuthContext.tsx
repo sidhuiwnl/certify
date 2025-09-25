@@ -11,6 +11,7 @@ interface User {
   institutionName?: string;
   companyName?: string;
   isVerified?: boolean;
+  institution_id?: string;
 }
 
 interface AuthContextType {
@@ -35,6 +36,8 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+
+  console.log("user",user)
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -65,6 +68,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         const payload = await res.json();
+
+
         if (!res.ok) {
           console.log('Backend login failed', payload);
           setLoading(false);
